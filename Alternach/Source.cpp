@@ -25,8 +25,8 @@ int* Sort(int* patterns, int numOfPatterns) {
 			}
 	return patterns;
 }
-// Нахождение паттернов, создающих единственную живую клетку
-int* PatternsFinder() {
+// Поиск паттернов, создающих единственную живую клетку
+int* FindPatterns() {
 	int* patterns = nullptr;
 	int numOfPatterns = 0;
 	bool field[5][5] = {}; // Поле 5x5 для размещения паттернов
@@ -125,7 +125,7 @@ int TransposePattern(int pattern) {
 	free(newPattern);
 	return inversePattern;
 }
-
+// Проверка на наличие совпадений в двух паттернах
 bool MatchCheck(int pattern1, int pattern2) {
 	bool match = false;
 	while (pattern1 > 0 && !match) {
@@ -139,7 +139,7 @@ bool MatchCheck(int pattern1, int pattern2) {
 	}
 	return match;
 }
-
+// Проверка на содержание одного паттерна в другом
 bool FullMatchCheck(int pattern1, int pattern2) {
 	bool match = true;
 	if (pattern1 != pattern2)
@@ -150,7 +150,7 @@ bool FullMatchCheck(int pattern1, int pattern2) {
 		}
 	return match;
 }
-
+// Составление паттерна, дополняющего исходный паттерн до полного
 int InversePattern(int pattern) {
 	int newPattern = 0;
 	for (int i = 1; i <= 9; i++)
@@ -158,7 +158,6 @@ int InversePattern(int pattern) {
 			newPattern = newPattern * 10 + i;
 	return newPattern;
 }
-
 // Проверка паттерна на соответствие паттерну, создающему единственную живую клетку
 bool PatternCheck(int pattern) {
 	bool coincidence = false;
@@ -166,7 +165,7 @@ bool PatternCheck(int pattern) {
 		coincidence = PATTERNS[i] == pattern;
 	return coincidence;
 }
-
+// Поиск возможных паттернов, если есть соседний паттерн с одной из сторон (сверху или слева)
 int* FindNeighboursOneSide(int pattern, dir direction) {
 	if (direction == RIGHT)
 		direction = LEFT;
@@ -192,7 +191,7 @@ int* FindNeighboursOneSide(int pattern, dir direction) {
 	}
 	return neighbours;
 }
-
+// Поиск возможных паттернов, если есть соседний паттерн по диагонали (сверху слева)
 int* FindNeighboursDiagonal(int pattern) {
 	int* neighbours = nullptr;
 	int numOfNeighbours = 0;
@@ -245,7 +244,7 @@ int* FindNeighboursDiagonal(int pattern) {
 	}
 	return neighbours;
 }
-
+// Поиск возможных паттернов, если есть соседние паттерны с двух сторон (сверху и слева)
 int* FindNeighboursTwoSide(int upPattern, int leftPattern) {
 	int* neighbours = nullptr;
 	int numOfNeighbours = 0;
@@ -273,7 +272,7 @@ int* FindNeighboursTwoSide(int upPattern, int leftPattern) {
 	}
 	return neighbours;
 }
-
+// Создание копии поля
 int** CopyField(int** field, int m, int n) {
 	int** newField = (int**)malloc(m * sizeof(int*));
 	for (int i = 0; i < m; i++) {
@@ -283,8 +282,8 @@ int** CopyField(int** field, int m, int n) {
 	}
 	return newField;
 }
-
-int CheckSecondRadius(int** field, int m, int n, int i, int j) {
+// Подсчет количества живых клеток в паттерне с учётом окружения
+int LiveCellsCount(int** field, int m, int n, int i, int j) {
 	int minJ = 0 > j - 2 ? 0 : j - 2;
 	int maxJ = n - 1 < j + 2 ? n - 1 : j + 2;
 	int minI = 0 > i - 2 ? 0 : i - 2;
@@ -316,7 +315,7 @@ int CheckSecondRadius(int** field, int m, int n, int i, int j) {
 	}
 	return k;
 }
-
+// Проверка паттерна на возможность конфликта с ранее заполненными паттернами
 bool OverlapCheck(int** field, int m, int n, int i, int j) {
 	int ok = true;
 	int minJ = 0 > j - 2 ? 0 : j - 2;
@@ -349,15 +348,15 @@ bool OverlapCheck(int** field, int m, int n, int i, int j) {
 					}
 				}
 				else if (!field[di][dj])
-					ok = CheckSecondRadius(field, m, n, di, dj) != 3;
+					ok = LiveCellsCount(field, m, n, di, dj) != 3;
 			}
 			else if ((i != di || j != dj) && !field[di][dj])
-				ok = CheckSecondRadius(field, m, n, di, dj) != 3;
+				ok = LiveCellsCount(field, m, n, di, dj) != 3;
 		}
 	}
 	return ok;
 }
-
+// Поиск полей
 void FindAllFields(int** field, int m, int n) {
 	bool complete = true;
 	for (int i = 0; i < m && complete; i++) {
@@ -498,7 +497,7 @@ void FindAllFields(int** field, int m, int n) {
 		FIELDS[NUM_OF_FIELDS++] = CopyField(field, m, n);
 	}
 }
-
+// Ввод поля
 int** InputField(int& m, int& n) {
 	do {
 		cout << "Enter M: ";
@@ -544,7 +543,7 @@ int** InputField(int& m, int& n) {
 	}
 	return field;
 }
-
+// Составление из поля паттернов поля с клетками
 int** ReformField(int** field, int m, int n) {
 	int** newField = (int**)malloc((m + 2) * sizeof(int*));
 	for (int i = 0; i < m + 2; i++) {
@@ -591,7 +590,7 @@ int** ReformField(int** field, int m, int n) {
 			}
 	return newField;
 }
-
+// Проверка поля
 bool FieldCheck(int** field, int** newField, int m, int n) {
 	bool error = false;
 	for (int i = 0; i < m + 2 && !error; i++)
@@ -611,7 +610,7 @@ bool FieldCheck(int** field, int** newField, int m, int n) {
 		}
 	return !error;
 }
-
+// Вывод поля на экран
 void PrintField(int** field, int m, int n) {
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++)
@@ -623,7 +622,7 @@ void PrintField(int** field, int m, int n) {
 int main() {
 	NUM_OF_FIELDS = 0;
 	FIELDS = nullptr;
-	PATTERNS = PatternsFinder();
+	PATTERNS = FindPatterns();
 	int m = 0, n = 0;
 	int error = 0;
 	int** field = InputField(m, n);
