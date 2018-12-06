@@ -3,9 +3,12 @@ using namespace std;
 
 enum dir { UP, LEFT, DOWN, RIGHT }; // Направления сдвига паттернов
 
-int NUM_OF_FIELDS; // Количество искомых полей
-int* PATTERNS; // Паттерны, создающие единственную живую клетку
+int* PATTERNS0;
+int NUM_OF_PATTERNS0;
+int* PATTERNS1;
+int NUM_OF_PATTERNS1;
 int*** FIELDS; // Искомые поля
+int NUM_OF_FIELDS; // Количество искомых полей
 
 // Очиста полей
 int** FreeField(int** field, int m) {
@@ -25,31 +28,30 @@ int* Sort(int* patterns, int numOfPatterns) {
 			}
 	return patterns;
 }
-// Поиск паттернов, создающих единственную живую клетку
-int* FindPatterns() {
-	int* patterns = nullptr;
-	int numOfPatterns = 0;
-	bool field[5][5] = {}; // Поле 5x5 для размещения паттернов
+
+void FindAllPatterns() {
+	PATTERNS0 = PATTERNS1 = nullptr;
+	NUM_OF_PATTERNS0 = NUM_OF_PATTERNS1 = 0;
+	bool field[3][3] = {}; // Поле 5x5 для размещения паттернов
 	for (int i = 0; i < 512; i++) {
 		int numOfLiveCells = 0, pattern = 0;
-		for (int m = 0; m < 3 && numOfLiveCells < 4; m++)
-			for (int n = 0; n < 3 && numOfLiveCells < 4; n++) {
-				numOfLiveCells += field[m + 1][n + 1] = (i >> (3 * m + n)) & 1; // Подсчет количества живых клеток в паттерне
-				if (field[m + 1][n + 1])
+		for (int m = 0; m < 3; m++)
+			for (int n = 0; n < 3; n++) {
+				numOfLiveCells += field[m][n] = (i >> (3 * m + n)) & 1; // Подсчет количества живых клеток в паттерне
+				if (field[m][n])
 					pattern = pattern * 10 + (3 * m + n) + 1; // Создание кода паттерна
 			}
 		if (numOfLiveCells == 3) {
-			int numOfSurviveCells = 0;
-			for (int m = 1; m < 4 && numOfSurviveCells < 2; m++)
-				for (int n = 1; n < 4 && numOfSurviveCells < 2; n++)
-					numOfSurviveCells += (field[m - 1][n - 1] + field[m - 1][n] + field[m - 1][n + 1] + field[m][n - 1] + field[m][n] + field[m][n + 1] + field[m + 1][n - 1] + field[m + 1][n] + field[m + 1][n + 1]) == 3; // Подсчет количества клеток, создаваемых паттерном
-			if (numOfSurviveCells == 1) {
-				patterns = (int*)realloc(patterns, (numOfPatterns + 1) * sizeof(int));
-				patterns[numOfPatterns++] = pattern; // Сохранение паттерна
-			}
+			PATTERNS1 = (int*)realloc(PATTERNS1, (NUM_OF_PATTERNS1 + 1) * sizeof(int));
+			PATTERNS1[NUM_OF_PATTERNS1++] = pattern; // Сохранение паттерна
+		}
+		else {
+			PATTERNS0 = (int*)realloc(PATTERNS0, (NUM_OF_PATTERNS0 + 1) * sizeof(int));
+			PATTERNS0[NUM_OF_PATTERNS0++] = pattern; // Сохранение паттерна
 		}
 	}
-	return Sort(patterns, numOfPatterns - 1);
+	Sort(PATTERNS0, NUM_OF_PATTERNS0 - 1);
+	Sort(PATTERNS1, NUM_OF_PATTERNS1 - 1);
 }
 // Сдвиг паттерна
 int MovePattern(int pattern, dir direction) {
@@ -88,46 +90,9 @@ int MovePattern(int pattern, dir direction) {
 	}
 	return newPattern;
 }
-// Составление транспонированного паттерна
-int TransposePattern(int pattern) {
-	int numOfDigits = 0;
-	int* newPattern = (int*)malloc(3 * sizeof(int));
-	while (pattern > 0) {
-		switch (pattern % 10) {
-		case 2:
-			newPattern[numOfDigits++] = 4;
-			break;
-		case 3:
-			newPattern[numOfDigits++] = 7;
-			break;
-		case 4:
-			newPattern[numOfDigits++] = 2;
-			break;
-		case 6:
-			newPattern[numOfDigits++] = 8;
-			break;
-		case 7:
-			newPattern[numOfDigits++] = 3;
-			break;
-		case 8:
-			newPattern[numOfDigits++] = 6;
-			break;
-		default:
-			newPattern[numOfDigits++] = pattern % 10;
-			break;
-		}
-		pattern /= 10;
-	}
-	newPattern = Sort(newPattern, numOfDigits - 1);
-	int inversePattern = 0;
-	for (int i = 0; i < numOfDigits; i++)
-		inversePattern = (inversePattern * 10) + newPattern[i];
-	free(newPattern);
-	return inversePattern;
-}
-// Проверка на наличие совпадений в двух паттернах
+
 bool MatchCheck(int pattern1, int pattern2) {
-	bool match = false;
+	bool match = pattern1 == pattern2;
 	while (pattern1 > 0 && !match) {
 		int temp = pattern2;
 		while (temp > 0 && !match) {
@@ -158,86 +123,42 @@ int InversePattern(int pattern) {
 			newPattern = newPattern * 10 + i;
 	return newPattern;
 }
-// Проверка паттерна на соответствие паттерну, создающему единственную живую клетку
-bool PatternCheck(int pattern) {
-	bool coincidence = false;
-	for (int i = 0; i < 22 && !coincidence; i++)
-		coincidence = PATTERNS[i] == pattern;
-	return coincidence;
+
+int LiveCellsCount(int pattern) {
+	int numOfLiveCells = 0;
+	while(pattern > 0) {
+		pattern /= 10;
+		numOfLiveCells++;
+	}
+	return numOfLiveCells;
 }
 // Поиск возможных паттернов, если есть соседний паттерн с одной из сторон (сверху или слева)
-int* FindNeighboursOneSide(int pattern, dir direction) {
+int* FindNeighboursOneSide(int pattern, dir direction, bool option) {
 	if (direction == RIGHT)
 		direction = LEFT;
 	else if (direction == DOWN)
 		direction = UP;
 	int newPattern = MovePattern(pattern, direction);
+	int newInversePattern = MovePattern(InversePattern(pattern), direction);
 	int* neighbours = nullptr;
 	int numOfNeighbours = 0;
-	if (newPattern > 9) {
-		if (direction == LEFT)
-			newPattern = TransposePattern(newPattern);
-		for (int i = 7; i <= 9; i++) {
-			int tempPattern = direction == LEFT ? TransposePattern(newPattern * 10 + i) : newPattern * 10 + i;
-			if (PatternCheck(tempPattern)) {
+	int numOfLiveCells = LiveCellsCount(newPattern);
+	if (numOfLiveCells == 3 && option) {
+		neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
+		neighbours[numOfNeighbours++] = newPattern;
+	} else if (numOfLiveCells < 3 && option) {
+		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
+			if (FullMatchCheck(newPattern, PATTERNS1[i]) && !MatchCheck(newInversePattern, PATTERNS1[i])) {
 				neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-				neighbours[numOfNeighbours++] = tempPattern;
+				neighbours[numOfNeighbours++] = PATTERNS1[i];
 			}
-		}
-		if (numOfNeighbours) {
-			neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-			neighbours[numOfNeighbours] = 0;
-		}
-	}
-	return neighbours;
-}
-// Поиск возможных паттернов, если есть соседний паттерн по диагонали (сверху слева)
-int* FindNeighboursDiagonal(int pattern) {
-	int* neighbours = nullptr;
-	int numOfNeighbours = 0;
-	int* rightNeighbours = FindNeighboursOneSide(pattern, RIGHT);
-	if (rightNeighbours != nullptr) {
-		int numOfRightNeighbours = 0;
-		do {
-			int* rightDownNeighbours = FindNeighboursOneSide(rightNeighbours[numOfRightNeighbours], DOWN);
-			if (rightDownNeighbours != nullptr) {
-				int numOfRightDownNeighbours = 0;
-				do {
-					neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-					neighbours[numOfNeighbours++] = rightDownNeighbours[numOfRightDownNeighbours];
-				} while (rightDownNeighbours[++numOfRightDownNeighbours]);
+	} else if (!option) {
+		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
+			if (FullMatchCheck(newPattern, PATTERNS0[i]) && !MatchCheck(newInversePattern, PATTERNS0[i])) {
+				neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
+				neighbours[numOfNeighbours++] = PATTERNS0[i];
 			}
-			free(rightDownNeighbours);
-		} while (rightNeighbours[++numOfRightNeighbours]);
 	}
-	else {
-		int* downNeighbours = FindNeighboursOneSide(pattern, DOWN);
-		if (downNeighbours != nullptr) {
-			int numOfDownNeighbours = 0;
-			do {
-				int* downRightNeighbours = FindNeighboursOneSide(downNeighbours[numOfDownNeighbours], RIGHT);
-				if (downRightNeighbours != nullptr) {
-					int numOfRightDownNeighbours = 0;
-					do {
-						neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-						neighbours[numOfNeighbours++] = downRightNeighbours[numOfRightDownNeighbours];
-					} while (downRightNeighbours[++numOfRightDownNeighbours]);
-				}
-				free(downRightNeighbours);
-			} while (downNeighbours[++numOfDownNeighbours]);
-		}
-		else {
-			int newPattern = MovePattern(MovePattern(pattern, LEFT), UP);
-			int newInversePattern = MovePattern(MovePattern(InversePattern(pattern), LEFT), UP);
-			for (int i = 0; i < 22; i++)
-				if (FullMatchCheck(newPattern, PATTERNS[i]) && !MatchCheck(newInversePattern, PATTERNS[i])) {
-					neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-					neighbours[numOfNeighbours++] = PATTERNS[i];
-				}
-		}
-		free(downNeighbours);
-	}
-	free(rightNeighbours);
 	if (numOfNeighbours) {
 		neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
 		neighbours[numOfNeighbours] = 0;
@@ -245,12 +166,12 @@ int* FindNeighboursDiagonal(int pattern) {
 	return neighbours;
 }
 // Поиск возможных паттернов, если есть соседние паттерны с двух сторон (сверху и слева)
-int* FindNeighboursTwoSide(int upPattern, int leftPattern) {
+int* FindNeighboursTwoSide(int upPattern, int leftPattern, bool option) {
 	int* neighbours = nullptr;
 	int numOfNeighbours = 0;
-	int* downNeighbours = FindNeighboursOneSide(upPattern, DOWN);
+	int* downNeighbours = FindNeighboursOneSide(upPattern, DOWN, option);
 	if (downNeighbours != nullptr) {
-		int* rightNeighbours = FindNeighboursOneSide(leftPattern, RIGHT);
+		int* rightNeighbours = FindNeighboursOneSide(leftPattern, RIGHT, option);
 		if (rightNeighbours != nullptr) {
 			int numOfDownNeighbours = 0;
 			do {
@@ -258,7 +179,7 @@ int* FindNeighboursTwoSide(int upPattern, int leftPattern) {
 				do {
 					if (downNeighbours[numOfDownNeighbours] == rightNeighbours[numOfRightNeighbours]) {
 						neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-						neighbours[numOfNeighbours++] = 0;
+						neighbours[numOfNeighbours++] = downNeighbours[numOfDownNeighbours];
 					}
 				} while (rightNeighbours[++numOfRightNeighbours]);
 			} while (downNeighbours[++numOfDownNeighbours]);
@@ -282,211 +203,138 @@ int** CopyField(int** field, int m, int n) {
 	}
 	return newField;
 }
-// Подсчет количества живых клеток в паттерне с учётом окружения
-int LiveCellsCount(int** field, int m, int n, int i, int j) {
-	int minJ = 0 > j - 2 ? 0 : j - 2;
-	int maxJ = n - 1 < j + 2 ? n - 1 : j + 2;
-	int minI = 0 > i - 2 ? 0 : i - 2;
-	int maxI = m - 1 < i + 2 ? m - 1 : i + 2;
-	int pattern = 0, k = 0;
-	for (int di = minI; di <= maxI; di++) {
-		for (int dj = minJ; dj <= maxJ; dj++) {
-			if (field[di][dj] > 1) {
-				int num = field[di][dj];
-				for (int ii = 0; ii < abs(i - di); ii++)
-					if (i - di > 0)
-						num = MovePattern(num, UP);
-					else
-						num = MovePattern(num, DOWN);
-				for (int jj = 0; jj < abs(j - dj); jj++)
-					if (j - dj > 0)
-						num = MovePattern(num, LEFT);
-					else
-						num = MovePattern(num, RIGHT);
-				while (num > 0) {
-					if (!MatchCheck(num % 10, pattern)) {
-						pattern = pattern * 10 + num % 10;
-						k++;
-					}
-					num /= 10;
-				}
+
+bool BoundaryCheck(int pattern, int m, int n, int i, int j) {
+	bool ok = true;
+	if (!i || i == m - 1 || !j || j == n - 1) {
+		int field[5][5] = {};
+		while (pattern > 0) {
+			switch (pattern % 10) {
+			case 1:
+				field[1][1] = 1;
+				break;
+			case 2:
+				field[1][2] = 1;
+				break;
+			case 3:
+				field[1][3] = 1;
+				break;
+			case 4:
+				field[2][1] = 1;
+				break;
+			case 5:
+				field[2][2] = 1;
+				break;
+			case 6:
+				field[2][3] = 1;
+				break;
+			case 7:
+				field[3][1] = 1;
+				break;
+			case 8:
+				field[3][2] = 1;
+				break;
+			case 9:
+				field[3][3] = 1;
+				break;
+			}
+			pattern /= 10;
+		}
+		if (!i && ok) {
+			for (int dj = 1; dj < 4 && ok; dj++) {
+				int di = 1;
+				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
 			}
 		}
-	}
-	return k;
-}
-// Проверка паттерна на возможность конфликта с ранее заполненными паттернами
-bool OverlapCheck(int** field, int m, int n, int i, int j) {
-	int ok = true;
-	int minJ = 0 > j - 2 ? 0 : j - 2;
-	int maxJ = n - 1 < j + 2 ? n - 1 : j + 2;
-	int minI = 0 > i - 2 ? 0 : i - 2;
-	int maxI = i;
-	for (int di = minI; di <= maxI && ok; di++) {
-		for (int dj = minJ; dj <= maxJ && ok; dj++) {
-			if (i - di == 2 || abs(j - dj) == 2) {
-				if (field[di][dj] > 1) {
-					int num = field[di][dj];
-					for (int ii = 0; ii < i - di; ii++)
-						num = MovePattern(num, UP);
-					for (int jj = 0; jj < abs(j - dj); jj++)
-						if (j - dj > 0)
-							num = MovePattern(num, LEFT);
-						else
-							num = MovePattern(num, RIGHT);
-					ok = FullMatchCheck(num, field[i][j]);
-					if (ok) {
-						num = InversePattern(field[di][dj]);
-						for (int ii = 0; ii < i - di; ii++)
-							num = MovePattern(num, UP);
-						for (int jj = 0; jj < abs(j - dj); jj++)
-							if (j - dj > 0)
-								num = MovePattern(num, LEFT);
-							else
-								num = MovePattern(num, RIGHT);
-						ok = !MatchCheck(num, field[i][j]);
-					}
-				}
-				else if (!field[di][dj])
-					ok = LiveCellsCount(field, m, n, di, dj) != 3;
+		if (i == m - 1 && ok) {
+			for (int dj = 1; dj < 4 && ok; dj++) {
+				int di = 3;
+				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
 			}
-			else if ((i != di || j != dj) && !field[di][dj])
-				ok = LiveCellsCount(field, m, n, di, dj) != 3;
+		}
+		if (!j && ok) {
+			for (int di = 1; di < 4 && ok; di++) {
+				int dj = 1;
+				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+			}
+		}
+		if (j == n - 1 && ok) {
+			for (int di = 1; di < 4 && ok; di++) {
+				int dj = 3;
+				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+			}
 		}
 	}
 	return ok;
 }
-// Поиск полей
+
 void FindAllFields(int** field, int m, int n) {
 	bool complete = true;
 	for (int i = 0; i < m && complete; i++) {
 		for (int j = 0; j < n && complete; j++) {
-			if (field[i][j] == 1) {
+			if (field[i][j] < 0) {
 				complete = false;
 				if (!i) {
 					if (!j) {
-						for (int k = 0; k < 22; k++) {
-							int** newField = CopyField(field, m, n);
-							newField[i][j] = PATTERNS[k];
-							FindAllFields(newField, m, n);
-							FreeField(newField, m);
-						}
-					}
-					else {
-						if (field[i][j - 1]) {
-							int* rightNeighbours = FindNeighboursOneSide(field[i][j - 1], RIGHT);
-							if (rightNeighbours != nullptr) {
-								int numOfRightNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = rightNeighbours[numOfRightNeighbours];
-									FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (rightNeighbours[++numOfRightNeighbours]);
-							}
-							free(rightNeighbours);
-						}
-						else {
-							for (int k = 0; k < 22; k++) {
+						if (field[i][j] + 2) {
+							for (int k = 0; k < NUM_OF_PATTERNS1; k++) {
 								int** newField = CopyField(field, m, n);
-								newField[i][j] = PATTERNS[k];
-								if (OverlapCheck(newField, m, n, i, j))
+								newField[i][j] = PATTERNS1[k];
+								if (BoundaryCheck(newField[i][j], m, n, i, j))
+									FindAllFields(newField, m, n);
+								FreeField(newField, m);
+							}
+						} else {
+							for (int k = 0; k < NUM_OF_PATTERNS0; k++) {
+								int** newField = CopyField(field, m, n);
+								newField[i][j] = PATTERNS0[k];
+								if (BoundaryCheck(newField[i][j], m, n, i, j))
 									FindAllFields(newField, m, n);
 								FreeField(newField, m);
 							}
 						}
+					} else {
+						int* rightNeighbours = FindNeighboursOneSide(field[i][j - 1], RIGHT, field[i][j] + 2);
+						if (rightNeighbours != nullptr) {
+							int numOfRightNeighbours = 0;
+							do {
+								int** newField = CopyField(field, m, n);
+								newField[i][j] = rightNeighbours[numOfRightNeighbours];
+								if (BoundaryCheck(newField[i][j], m, n, i, j))
+									FindAllFields(newField, m, n);
+								FreeField(newField, m);
+							} while (rightNeighbours[++numOfRightNeighbours]);
+						}
+						free(rightNeighbours);
 					}
-				}
-				else {
+				} else {
 					if (!j) {
-						if (field[i - 1][j]) {
-							int* downNeighbours = FindNeighboursOneSide(field[i - 1][j], DOWN);
-							if (downNeighbours != nullptr) {
-								int numOfDownNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = downNeighbours[numOfDownNeighbours];
-									if (OverlapCheck(newField, m, n, i, j))
-										FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (downNeighbours[++numOfDownNeighbours]);
-							}
-							free(downNeighbours);
-						}
-						else {
-							for (int k = 0; k < 22; k++) {
+						int* downNeighbours = FindNeighboursOneSide(field[i - 1][j], DOWN, field[i][j] + 2);
+						if (downNeighbours != nullptr) {
+							int numOfDownNeighbours = 0;
+							do {
 								int** newField = CopyField(field, m, n);
-								newField[i][j] = PATTERNS[k];
-								if (OverlapCheck(newField, m, n, i, j))
+								newField[i][j] = downNeighbours[numOfDownNeighbours];
+								if (BoundaryCheck(newField[i][j], m, n, i, j))
 									FindAllFields(newField, m, n);
 								FreeField(newField, m);
-							}
+							} while (downNeighbours[++numOfDownNeighbours]);
 						}
+						free(downNeighbours);
 					}
 					else {
-						if (!field[i - 1][j - 1] && !field[i - 1][j] && !field[i][j - 1]) {
-							for (int k = 0; k < 22; k++) {
+						int* neighbours = FindNeighboursTwoSide(field[i - 1][j], field[i][j - 1], field[i][j] + 2);
+						if (neighbours != nullptr) {
+							int numOfNeighbours = 0;
+							do {
 								int** newField = CopyField(field, m, n);
-								newField[i][j] = PATTERNS[k];
-								if (OverlapCheck(newField, m, n, i, j))
+								newField[i][j] = neighbours[numOfNeighbours];
+								if (BoundaryCheck(newField[i][j], m, n, i, j))
 									FindAllFields(newField, m, n);
 								FreeField(newField, m);
-							}
+							} while (neighbours[++numOfNeighbours]);
 						}
-						else if (field[i - 1][j] && field[i][j - 1]) {
-							int* neighbours = FindNeighboursTwoSide(field[i - 1][j], field[i][j - 1]);
-							if (neighbours != nullptr) {
-								int numOfNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = neighbours[numOfNeighbours];
-									FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (neighbours[++numOfNeighbours]);
-							}
-							free(neighbours);
-						}
-						else if (field[i - 1][j]) {
-							int* downNeighbours = FindNeighboursOneSide(field[i - 1][j], DOWN);
-							if (downNeighbours != nullptr) {
-								int numOfDownNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = downNeighbours[numOfDownNeighbours];
-									FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (downNeighbours[++numOfDownNeighbours]);
-							}
-							free(downNeighbours);
-						}
-						else if (field[i][j - 1]) {
-							int* rightNeighbours = FindNeighboursOneSide(field[i][j - 1], RIGHT);
-							if (rightNeighbours != nullptr) {
-								int numOfRightNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = rightNeighbours[numOfRightNeighbours];
-									if (OverlapCheck(newField, m, n, i, j))
-										FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (rightNeighbours[++numOfRightNeighbours]);
-							}
-							free(rightNeighbours);
-						}
-						else if (field[i - 1][j - 1]) {
-							int* diagonalNeighbours = FindNeighboursDiagonal(field[i - 1][j - 1]);
-							if (diagonalNeighbours != nullptr) {
-								int numOfDiagonalNeighbours = 0;
-								do {
-									int** newField = CopyField(field, m, n);
-									newField[i][j] = diagonalNeighbours[numOfDiagonalNeighbours];
-									if (OverlapCheck(newField, m, n, i, j))
-										FindAllFields(newField, m, n);
-									FreeField(newField, m);
-								} while (diagonalNeighbours[++numOfDiagonalNeighbours]);
-							}
-							free(diagonalNeighbours);
-						}
+						free(neighbours);
 					}
 				}
 			}
@@ -603,10 +451,11 @@ bool FieldCheck(int** field, int** newField, int m, int n) {
 			for (int di = minI; di <= maxI; di++)
 				for (int dj = minJ; dj <= maxJ; dj++)
 					numOfNeighbours += newField[di][dj];
+			numOfNeighbours -= newField[i][j];
 			if (i == 0 || i == m + 1 || j == 0 || j == n + 1)
 				error = numOfNeighbours == 3;
 			else
-				error = !((numOfNeighbours == 3 && field[i - 1][j - 1]) || (numOfNeighbours != 3 && !field[i - 1][j - 1]));
+				error = !(((numOfNeighbours == 3 || numOfNeighbours + field[i - 1][j - 1] == 3) && field[i - 1][j - 1]) || ((numOfNeighbours + field[i - 1][j - 1] != 3) && !field[i - 1][j - 1]));
 		}
 	return !error;
 }
@@ -622,14 +471,22 @@ void PrintField(int** field, int m, int n) {
 int main() {
 	NUM_OF_FIELDS = 0;
 	FIELDS = nullptr;
-	PATTERNS = FindPatterns();
+	FindAllPatterns();
 	int m = 0, n = 0;
 	int error = 0;
 	int** field = InputField(m, n);
-	FindAllFields(field, m, n);
+	int** Field = CopyField(field, m, n);
+	for (int i = 0; i < m; i++)
+		for (int j = 0; j < n; j++)
+			Field[i][j] -= 2;
+	FindAllFields(Field, m, n);
+	FreeField(Field, m);
 	bool printCorrect = false, printErrors = false;
 	printCorrect = true;
 	printErrors = true;
+	/*int** newField = ReformField(FIELDS[121], m, n);
+	PrintField(newField, m+2, n+2);
+	FieldCheck(field, newField, m, n);*/
 	for (int i = 0; i < NUM_OF_FIELDS; i++) {
 		int** newField = ReformField(FIELDS[i], m, n);
 		if (!FieldCheck(field, newField, m, n)) {
@@ -647,7 +504,8 @@ int main() {
 	}
 	cout << "ERROR = " << error << " CORRECT = " << NUM_OF_FIELDS - error << endl;
 	system("pause");
-	free(PATTERNS);
+	free(PATTERNS0);
+	free(PATTERNS1);
 	for (int i = 0; i < NUM_OF_FIELDS; i++)
 		FreeField(FIELDS[i], m);
 	free(FIELDS);
