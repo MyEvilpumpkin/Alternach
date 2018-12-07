@@ -1,16 +1,20 @@
 #include <iostream>
 using namespace std;
 
+// Паттерн - комбинация единиц в квадрате 3x3, записанная в виде порядковых номеров ячеек, начиная с единицы
+// Поле - комбинация паттернов
+// Преобразованное поле - поле, в котором все паттерны заменены на эквивалентные им комбинации единиц и нулей
+
 enum dir { UP, LEFT, DOWN, RIGHT }; // Направления сдвига паттернов
 
-int* PATTERNS0;
-int NUM_OF_PATTERNS0;
-int* PATTERNS1;
-int NUM_OF_PATTERNS1;
+int* PATTERNS0; // Паттерны не создающие жизнь в центе
+int NUM_OF_PATTERNS0; // Количество паттернов, не создающих жизнь в центе
+int* PATTERNS1; // Паттерны создающие жизнь в центре
+int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
 int*** FIELDS; // Искомые поля
 int NUM_OF_FIELDS; // Количество искомых полей
 
-// Очиста полей
+// Освобождение памяти из под полей
 int** FreeField(int** field, int m) {
 	for (int i = 0; i < m; i++)
 		free(field[i]);
@@ -28,26 +32,26 @@ int* Sort(int* patterns, int numOfPatterns) {
 			}
 	return patterns;
 }
-
+// Нахождение всех паттернов, создающих и не создащих жизнь
 void FindAllPatterns() {
 	PATTERNS0 = PATTERNS1 = nullptr;
 	NUM_OF_PATTERNS0 = NUM_OF_PATTERNS1 = 0;
-	bool field[3][3] = {}; // Поле 5x5 для размещения паттернов
+	bool field[3][3] = {};
 	for (int i = 0; i < 512; i++) {
 		int numOfLiveCells = 0, pattern = 0;
 		for (int m = 0; m < 3; m++)
 			for (int n = 0; n < 3; n++) {
-				numOfLiveCells += field[m][n] = (i >> (3 * m + n)) & 1; // Подсчет количества живых клеток в паттерне
+				numOfLiveCells += field[m][n] = (i >> (3 * m + n)) & 1;
 				if (field[m][n])
-					pattern = pattern * 10 + (3 * m + n) + 1; // Создание кода паттерна
+					pattern = pattern * 10 + (3 * m + n) + 1;
 			}
-		if (numOfLiveCells == 3) {
+		if (numOfLiveCells - field[1][1] == 3 || numOfLiveCells == 3) {
 			PATTERNS1 = (int*)realloc(PATTERNS1, (NUM_OF_PATTERNS1 + 1) * sizeof(int));
-			PATTERNS1[NUM_OF_PATTERNS1++] = pattern; // Сохранение паттерна
+			PATTERNS1[NUM_OF_PATTERNS1++] = pattern;
 		}
 		else {
 			PATTERNS0 = (int*)realloc(PATTERNS0, (NUM_OF_PATTERNS0 + 1) * sizeof(int));
-			PATTERNS0[NUM_OF_PATTERNS0++] = pattern; // Сохранение паттерна
+			PATTERNS0[NUM_OF_PATTERNS0++] = pattern;
 		}
 	}
 	Sort(PATTERNS0, NUM_OF_PATTERNS0 - 1);
@@ -90,7 +94,7 @@ int MovePattern(int pattern, dir direction) {
 	}
 	return newPattern;
 }
-
+// Проверка на наличие совпадений в двух паттернах
 bool MatchCheck(int pattern1, int pattern2) {
 	bool match = pattern1 == pattern2;
 	while (pattern1 > 0 && !match) {
@@ -115,7 +119,7 @@ bool FullMatchCheck(int pattern1, int pattern2) {
 		}
 	return match;
 }
-// Составление паттерна, дополняющего исходный паттерн до полного
+// Составление паттерна, дополняющего исходный паттерн до полного (состоящего только из единиц)
 int InversePattern(int pattern) {
 	int newPattern = 0;
 	for (int i = 1; i <= 9; i++)
@@ -123,7 +127,7 @@ int InversePattern(int pattern) {
 			newPattern = newPattern * 10 + i;
 	return newPattern;
 }
-
+// Подсчет количества живых клеток (единиц) в паттерне
 int LiveCellsCount(int pattern) {
 	int numOfLiveCells = 0;
 	while(pattern > 0) {
@@ -132,7 +136,7 @@ int LiveCellsCount(int pattern) {
 	}
 	return numOfLiveCells;
 }
-// Поиск возможных паттернов, если есть соседний паттерн с одной из сторон (сверху или слева)
+// Поиск возможных паттернов, если есть соседний паттерн только с одной из сторон (сверху или слева)
 int* FindNeighboursOneSide(int pattern, dir direction, bool option) {
 	if (direction == RIGHT)
 		direction = LEFT;
@@ -142,11 +146,7 @@ int* FindNeighboursOneSide(int pattern, dir direction, bool option) {
 	int newInversePattern = MovePattern(InversePattern(pattern), direction);
 	int* neighbours = nullptr;
 	int numOfNeighbours = 0;
-	int numOfLiveCells = LiveCellsCount(newPattern);
-	if (numOfLiveCells == 3 && option) {
-		neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-		neighbours[numOfNeighbours++] = newPattern;
-	} else if (numOfLiveCells < 3 && option) {
+	if (option) {
 		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
 			if (FullMatchCheck(newPattern, PATTERNS1[i]) && !MatchCheck(newInversePattern, PATTERNS1[i])) {
 				neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
@@ -203,7 +203,7 @@ int** CopyField(int** field, int m, int n) {
 	}
 	return newField;
 }
-
+// Проверка паттернов, находящихся на границе поля (паттерны на границе не должны создавать жизнь за предалами поля)
 bool BoundaryCheck(int pattern, int m, int n, int i, int j) {
 	bool ok = true;
 	if (!i || i == m - 1 || !j || j == n - 1) {
@@ -243,31 +243,35 @@ bool BoundaryCheck(int pattern, int m, int n, int i, int j) {
 		if (!i && ok) {
 			for (int dj = 1; dj < 4 && ok; dj++) {
 				int di = 1;
-				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+				int numOfNeighbours = field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1];
+				ok = !((numOfNeighbours == 3) || (numOfNeighbours + field[di][dj] == 3));
 			}
 		}
 		if (i == m - 1 && ok) {
 			for (int dj = 1; dj < 4 && ok; dj++) {
 				int di = 3;
-				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+				int numOfNeighbours = field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1];
+				ok = !((numOfNeighbours == 3) || (numOfNeighbours + field[di][dj] == 3));
 			}
 		}
 		if (!j && ok) {
 			for (int di = 1; di < 4 && ok; di++) {
 				int dj = 1;
-				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+				int numOfNeighbours = field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1];
+				ok = !((numOfNeighbours == 3) || (numOfNeighbours + field[di][dj] == 3));
 			}
 		}
 		if (j == n - 1 && ok) {
 			for (int di = 1; di < 4 && ok; di++) {
 				int dj = 3;
-				ok = (field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1]) != 3;
+				int numOfNeighbours = field[di - 1][dj - 1] + field[di - 1][dj] + field[di - 1][dj + 1] + field[di][dj - 1] + field[di][dj + 1] + field[di + 1][dj - 1] + field[di + 1][dj] + field[di + 1][dj + 1];
+				ok = !((numOfNeighbours == 3) || (numOfNeighbours + field[di][dj] == 3));
 			}
 		}
 	}
 	return ok;
 }
-
+// Нахождение полей, предшествующих исзодному полю
 void FindAllFields(int** field, int m, int n) {
 	bool complete = true;
 	for (int i = 0; i < m && complete; i++) {
@@ -345,7 +349,7 @@ void FindAllFields(int** field, int m, int n) {
 		FIELDS[NUM_OF_FIELDS++] = CopyField(field, m, n);
 	}
 }
-// Ввод поля
+// Ввод исходного поля
 int** InputField(int& m, int& n) {
 	do {
 		cout << "Enter M: ";
@@ -391,7 +395,7 @@ int** InputField(int& m, int& n) {
 	}
 	return field;
 }
-// Составление из поля паттернов поля с клетками
+// Составление из поля паттернов преобразованного поля
 int** ReformField(int** field, int m, int n) {
 	int** newField = (int**)malloc((m + 2) * sizeof(int*));
 	for (int i = 0; i < m + 2; i++) {
@@ -438,7 +442,7 @@ int** ReformField(int** field, int m, int n) {
 			}
 	return newField;
 }
-// Проверка поля
+// Проверка поля на наличие ошибок
 bool FieldCheck(int** field, int** newField, int m, int n) {
 	bool error = false;
 	for (int i = 0; i < m + 2 && !error; i++)
@@ -482,11 +486,8 @@ int main() {
 	FindAllFields(Field, m, n);
 	FreeField(Field, m);
 	bool printCorrect = false, printErrors = false;
-	printCorrect = true;
+	//printCorrect = true;
 	printErrors = true;
-	/*int** newField = ReformField(FIELDS[121], m, n);
-	PrintField(newField, m+2, n+2);
-	FieldCheck(field, newField, m, n);*/
 	for (int i = 0; i < NUM_OF_FIELDS; i++) {
 		int** newField = ReformField(FIELDS[i], m, n);
 		if (!FieldCheck(field, newField, m, n)) {
