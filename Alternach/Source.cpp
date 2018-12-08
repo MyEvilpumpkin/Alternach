@@ -277,24 +277,21 @@ void FindAllFields(int** field, int m, int n) {
 	for (int i = 0; i < m && complete; i++) {
 		for (int j = 0; j < n && complete; j++) {
 			if (field[i][j] < 0) {
+				int pattern = field[i][j];
 				complete = false;
 				if (!i) {
 					if (!j) {
 						if (field[i][j] + 2) {
 							for (int k = 0; k < NUM_OF_PATTERNS1; k++) {
-								int** newField = CopyField(field, m, n);
-								newField[i][j] = PATTERNS1[k];
-								if (BoundaryCheck(newField[i][j], m, n, i, j))
-									FindAllFields(newField, m, n);
-								FreeField(newField, m);
+								field[i][j] = PATTERNS1[k];
+								if (BoundaryCheck(field[i][j], m, n, i, j))
+									FindAllFields(field, m, n);
 							}
 						} else {
 							for (int k = 0; k < NUM_OF_PATTERNS0; k++) {
-								int** newField = CopyField(field, m, n);
-								newField[i][j] = PATTERNS0[k];
-								if (BoundaryCheck(newField[i][j], m, n, i, j))
-									FindAllFields(newField, m, n);
-								FreeField(newField, m);
+								field[i][j] = PATTERNS0[k];
+								if (BoundaryCheck(field[i][j], m, n, i, j))
+									FindAllFields(field, m, n);
 							}
 						}
 					} else {
@@ -302,11 +299,9 @@ void FindAllFields(int** field, int m, int n) {
 						if (rightNeighbours != nullptr) {
 							int numOfRightNeighbours = 0;
 							do {
-								int** newField = CopyField(field, m, n);
-								newField[i][j] = rightNeighbours[numOfRightNeighbours];
-								if (BoundaryCheck(newField[i][j], m, n, i, j))
-									FindAllFields(newField, m, n);
-								FreeField(newField, m);
+								field[i][j] = rightNeighbours[numOfRightNeighbours];
+								if (BoundaryCheck(field[i][j], m, n, i, j))
+									FindAllFields(field, m, n);
 							} while (rightNeighbours[++numOfRightNeighbours]);
 						}
 						free(rightNeighbours);
@@ -317,11 +312,9 @@ void FindAllFields(int** field, int m, int n) {
 						if (downNeighbours != nullptr) {
 							int numOfDownNeighbours = 0;
 							do {
-								int** newField = CopyField(field, m, n);
-								newField[i][j] = downNeighbours[numOfDownNeighbours];
-								if (BoundaryCheck(newField[i][j], m, n, i, j))
-									FindAllFields(newField, m, n);
-								FreeField(newField, m);
+								field[i][j] = downNeighbours[numOfDownNeighbours];
+								if (BoundaryCheck(field[i][j], m, n, i, j))
+									FindAllFields(field, m, n);
 							} while (downNeighbours[++numOfDownNeighbours]);
 						}
 						free(downNeighbours);
@@ -331,16 +324,15 @@ void FindAllFields(int** field, int m, int n) {
 						if (neighbours != nullptr) {
 							int numOfNeighbours = 0;
 							do {
-								int** newField = CopyField(field, m, n);
-								newField[i][j] = neighbours[numOfNeighbours];
-								if (BoundaryCheck(newField[i][j], m, n, i, j))
-									FindAllFields(newField, m, n);
-								FreeField(newField, m);
+								field[i][j] = neighbours[numOfNeighbours];
+								if (BoundaryCheck(field[i][j], m, n, i, j))
+									FindAllFields(field, m, n);
 							} while (neighbours[++numOfNeighbours]);
 						}
 						free(neighbours);
 					}
 				}
+				field[i][j] = pattern;
 			}
 		}
 	}
