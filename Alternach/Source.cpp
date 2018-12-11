@@ -21,18 +21,7 @@ int** FreeField(int** field, int m) {
 	free(field);
 	return field;
 }
-// Сортировка паттернов в лексикографическом порядке
-int* Sort(int* patterns, int numOfPatterns) {
-	for (int i = 0; i < numOfPatterns; i++)
-		for (int j = i + 1; j <= numOfPatterns; j++)
-			if (patterns[i] > patterns[j]) {
-				int temp = patterns[i];
-				patterns[i] = patterns[j];
-				patterns[j] = temp;
-			}
-	return patterns;
-}
-// Нахождение всех паттернов, создающих и не создащих жизнь
+// Нахождение всех паттернов, создающих и не создающих жизнь
 void FindAllPatterns() {
 	PATTERNS0 = PATTERNS1 = nullptr;
 	NUM_OF_PATTERNS0 = NUM_OF_PATTERNS1 = 0;
@@ -54,8 +43,6 @@ void FindAllPatterns() {
 			PATTERNS0[NUM_OF_PATTERNS0++] = pattern;
 		}
 	}
-	Sort(PATTERNS0, NUM_OF_PATTERNS0 - 1);
-	Sort(PATTERNS1, NUM_OF_PATTERNS1 - 1);
 }
 // Сдвиг паттерна
 int MovePattern(int pattern, dir direction) {
@@ -126,15 +113,6 @@ int InversePattern(int pattern) {
 		if (!MatchCheck(i, pattern))
 			newPattern = newPattern * 10 + i;
 	return newPattern;
-}
-// Подсчет количества живых клеток (единиц) в паттерне
-int LiveCellsCount(int pattern) {
-	int numOfLiveCells = 0;
-	while(pattern > 0) {
-		pattern /= 10;
-		numOfLiveCells++;
-	}
-	return numOfLiveCells;
 }
 // Поиск возможных паттернов, если есть соседний паттерн только с одной из сторон (сверху или слева)
 int* FindNeighboursOneSide(int pattern, dir direction, bool option) {
