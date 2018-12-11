@@ -251,12 +251,20 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 					int di = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 			else
 				for (int dj = 2; dj <= 3 && ok; dj++) {
 					int di = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 		}
 		if (i == m - 1 && ok) {
@@ -269,12 +277,20 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 					int di = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 			else
 				for (int dj = 2; dj <= 3 && ok; dj++) {
 					int di = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 		}
 		if (!j && ok) {
@@ -287,12 +303,20 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 					int dj = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 			else
 				for (int di = 2; di <= 3 && ok; di++) {
 					int dj = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 		}
 		if (j == n - 1 && ok) {
@@ -305,12 +329,20 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 					int dj = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 			else
 				for (int di = 2; di <= 3 && ok; di++) {
 					int dj = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
 					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
+					if (ok) {
+						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
+						ok = !(numOfNeighbours == 3);
+					}
 				}
 		}
 	}
