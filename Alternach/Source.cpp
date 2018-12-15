@@ -1,4 +1,7 @@
 #include <iostream>
+#include <thread>
+#include <mutex>
+#include <ctime>
 using namespace std;
 
 // Паттерн - комбинация единиц в квадрате 3x3, записанная в виде порядковых номеров ячеек, начиная с единицы
@@ -6,6 +9,8 @@ using namespace std;
 // Преобразованное поле - поле, в котором все паттерны заменены на эквивалентные им комбинации единиц и нулей
 
 enum dir { UP, LEFT, DOWN, RIGHT }; // Направления сдвига паттернов
+
+mutex mtx;
 
 int* PATTERNS0; // Паттерны не создающие жизнь в центе
 int NUM_OF_PATTERNS0; // Количество паттернов, не создающих жизнь в центе
@@ -326,7 +331,7 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 	}
 	return ok;
 }
-// Нахождение полей, предшествующих исзодному полю
+// Нахождение полей, предшествующих исходному полю
 void FindAllFields(int** field, int m, int n) {
 	bool complete = true;
 	for (int i = 0; i < m && complete; i++) {
@@ -337,17 +342,35 @@ void FindAllFields(int** field, int m, int n) {
 				if (!i) {
 					if (!j) {
 						if (field[i][j] + 2) {
+							thread th1[140];
+							int** newFields[140];
+							for (int k = 0; k < NUM_OF_PATTERNS1; k++)
+								newFields[k] = CopyField(field, m, n);
 							for (int k = 0; k < NUM_OF_PATTERNS1; k++) {
-								field[i][j] = PATTERNS1[k];
-								if (BoundaryCheck(field, m, n, i, j))
-									FindAllFields(field, m, n);
+								newFields[k][i][j] = PATTERNS1[k];
+								if (BoundaryCheck(newFields[k], m, n, i, j))
+									th1[k] = thread(FindAllFields, newFields[k], m, n);
+							}
+							for (int k = 0; k < NUM_OF_PATTERNS1; k++) {
+								if (th1[k].joinable())
+									th1[k].join();
+								FreeField(newFields[k], m);
 							}
 						}
 						else {
+							thread th0[372];
+							int** newFields[372];
+							for (int k = 0; k < NUM_OF_PATTERNS0; k++)
+								newFields[k] = CopyField(field, m, n);
 							for (int k = 0; k < NUM_OF_PATTERNS0; k++) {
-								field[i][j] = PATTERNS0[k];
-								if (BoundaryCheck(field, m, n, i, j))
-									FindAllFields(field, m, n);
+								newFields[k][i][j] = PATTERNS0[k];
+								if (BoundaryCheck(newFields[k], m, n, i, j))
+									th0[k] = thread(FindAllFields, newFields[k], m, n);
+							}
+							for (int k = 0; k < NUM_OF_PATTERNS0; k++) {
+								if (th0[k].joinable())
+									th0[k].join();
+								FreeField(newFields[k], m);
 							}
 						}
 					}
@@ -395,8 +418,10 @@ void FindAllFields(int** field, int m, int n) {
 		}
 	}
 	if (complete) {
+		mtx.lock();
 		FIELDS = (int***)realloc(FIELDS, (NUM_OF_FIELDS + 1) * sizeof(int**));
 		FIELDS[NUM_OF_FIELDS++] = CopyField(field, m, n);
+		mtx.unlock();
 	}
 }
 // Ввод исходного поля
@@ -533,7 +558,10 @@ int main() {
 	for (int i = 0; i < m; i++)
 		for (int j = 0; j < n; j++)
 			Field[i][j] -= 2;
+	clock_t time = clock();
 	FindAllFields(Field, m, n);
+	time = clock() - time;
+	cout << "TICKS = " << time << " SECONDS = " << time / CLK_TCK << endl;
 	FreeField(Field, m);
 	bool printCorrect = false, printErrors = false;
 	//printCorrect = true;
