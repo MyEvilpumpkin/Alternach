@@ -102,7 +102,7 @@ bool MatchCheck(int pattern1, int pattern2) {
 }
 // Проверка на содержание одного паттерна в другом
 bool FullMatchCheck(int pattern1, int pattern2) {
-	bool match = true;
+	bool match = pattern1 <= pattern2;
 	if (pattern1 != pattern2)
 		while (pattern1 > 0 && match) {
 			if (!MatchCheck(pattern1 % 10, pattern2))
@@ -131,16 +131,19 @@ int* FindNeighboursOneSide(int pattern, dir direction, bool option) {
 	int numOfNeighbours = 0;
 	if (option) {
 		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-			if (FullMatchCheck(newPattern, PATTERNS1[i]) && !MatchCheck(newInversePattern, PATTERNS1[i])) {
-				neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-				neighbours[numOfNeighbours++] = PATTERNS1[i];
-			}
-	} else if (!option) {
+			if (!MatchCheck(newInversePattern, PATTERNS1[i]))
+				if (FullMatchCheck(newPattern, PATTERNS1[i])) {
+					neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
+					neighbours[numOfNeighbours++] = PATTERNS1[i];
+				}
+	}
+	else if (!option) {
 		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-			if (FullMatchCheck(newPattern, PATTERNS0[i]) && !MatchCheck(newInversePattern, PATTERNS0[i])) {
-				neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
-				neighbours[numOfNeighbours++] = PATTERNS0[i];
-			}
+			if (!MatchCheck(newInversePattern, PATTERNS0[i]))
+				if (FullMatchCheck(newPattern, PATTERNS0[i])) {
+					neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
+					neighbours[numOfNeighbours++] = PATTERNS0[i];
+				}
 	}
 	if (numOfNeighbours) {
 		neighbours = (int*)realloc(neighbours, (numOfNeighbours + 1) * sizeof(int));
@@ -233,21 +236,19 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 				for (int dj = 1; dj <= 2 && ok; dj++) {
 					int di = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1] == 3)
+						ok = false;
 				}
 			else
 				for (int dj = 2; dj <= 3 && ok; dj++) {
 					int di = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1] == 3)
+						ok = false;
 				}
 		}
 		if (i == m - 1 && ok) {
@@ -259,21 +260,19 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 				for (int dj = 1; dj <= 2 && ok; dj++) {
 					int di = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1] == 3)
+						ok = false;
 				}
 			else
 				for (int dj = 2; dj <= 3 && ok; dj++) {
 					int di = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di][dj - 1] + newField[di][dj] + newField[di][dj + 1] == 3)
+						ok = false;
 				}
 		}
 		if (!j && ok) {
@@ -285,21 +284,19 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 				for (int di = 1; di <= 2 && ok; di++) {
 					int dj = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj] == 3)
+						ok = false;
 				}
 			else
 				for (int di = 2; di <= 3 && ok; di++) {
 					int dj = 1;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj] == 3)
+						ok = false;
 				}
 		}
 		if (j == n - 1 && ok) {
@@ -311,21 +308,19 @@ bool BoundaryCheck(int** field, int m, int n, int i, int j) {
 				for (int di = 1; di <= 2 && ok; di++) {
 					int dj = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj] == 3)
+						ok = false;
 				}
 			else
 				for (int di = 2; di <= 3 && ok; di++) {
 					int dj = 3;
 					int numOfNeighbours = newField[di - 1][dj - 1] + newField[di - 1][dj] + newField[di - 1][dj + 1] + newField[di][dj - 1] + newField[di][dj + 1] + newField[di + 1][dj - 1] + newField[di + 1][dj] + newField[di + 1][dj + 1];
-					ok = !((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3));
-					if (ok) {
-						numOfNeighbours = newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj];
-						ok = !(numOfNeighbours == 3);
-					}
+					if ((numOfNeighbours == 3) || (numOfNeighbours + newField[di][dj] == 3))
+						ok = false;
+					else if (newField[di - 1][dj] + newField[di][dj] + newField[di + 1][dj] == 3)
+						ok = false;
 				}
 		}
 	}
@@ -344,9 +339,8 @@ void FindAllFields(int** field, int m, int n) {
 						if (field[i][j] + 2) {
 							thread th1[140];
 							int** newFields[140];
-							for (int k = 0; k < NUM_OF_PATTERNS1; k++)
-								newFields[k] = CopyField(field, m, n);
 							for (int k = 0; k < NUM_OF_PATTERNS1; k++) {
+								newFields[k] = CopyField(field, m, n);
 								newFields[k][i][j] = PATTERNS1[k];
 								if (BoundaryCheck(newFields[k], m, n, i, j))
 									th1[k] = thread(FindAllFields, newFields[k], m, n);
@@ -360,9 +354,8 @@ void FindAllFields(int** field, int m, int n) {
 						else {
 							thread th0[372];
 							int** newFields[372];
-							for (int k = 0; k < NUM_OF_PATTERNS0; k++)
-								newFields[k] = CopyField(field, m, n);
 							for (int k = 0; k < NUM_OF_PATTERNS0; k++) {
+								newFields[k] = CopyField(field, m, n);
 								newFields[k][i][j] = PATTERNS0[k];
 								if (BoundaryCheck(newFields[k], m, n, i, j))
 									th0[k] = thread(FindAllFields, newFields[k], m, n);
