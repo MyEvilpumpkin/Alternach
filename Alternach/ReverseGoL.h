@@ -1,6 +1,6 @@
 #pragma once
 
-// Структура, описывающая паттерн
+// Структура, описывающая расширенный паттерн
 struct Pattern {
 	int pattern; // Паттерн
 	int* patternBitwise; // Паттерн в виде массива
@@ -8,11 +8,11 @@ struct Pattern {
 	Pattern() : pattern(0), patternBitwise(nullptr), numOfLiveCells(0) {};
 };
 
-// Структура, описывающая ячейку поля
+// Структура, описывающая ячейку
 struct Cell {
-	Pattern pattern; // Паттерн
-	Pattern inversePattern; // Инветрированный паттерн
-	void FillCell(int); // Заполение структуры исходя из эквивалентного паттерна
+	Pattern pattern; // Расширенный паттерн
+	Pattern inversePattern; // Инветрированный расширенный паттерн
+	void FillCell(int); // Заполение ячейки исходя из эквивалентного паттерна
 };
 
 int** FreeField(int**, int); // Освобождение памяти из под поля

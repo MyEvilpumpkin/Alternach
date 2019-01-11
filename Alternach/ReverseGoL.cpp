@@ -1,22 +1,24 @@
 #include <thread>
-#include <windows.h>
+#include <Windows.h>
 #include "ReverseGoL.h"
 
 using namespace std;
 
-// Паттерн - комбинация единиц в квадрате 3x3, записанная в виде порядковых номеров ячеек, начиная с единицы
-// Поле - комбинация паттернов
-// Поле структур - поле, в котором паттерны представлены в виде структур Cell
-// Преобразованное поле - поле, в котором все паттерны заменены на эквивалентные им комбинации единиц и нулей
+// Паттерн (int) - комбинация единиц в квадрате 3x3, записанная в виде порядковых номеров ячеек, начиная с единицы
+// Расширенный паттерн (Pattern) - структура, предназначенная для хранения расширенной информации о паттерне
+// Ячейка (Cell) - структура, предназначенная для хранения в одном месте расширенного паттерна и инвертированного расширенного паттерна
+// Поле (int**) - комбинация паттернов
+// Поле ячеек (Cell**) - поле, в котором паттерны заменены на ячейки (для сокращения количества рассчётов)
+// Преобразованное поле (int**) - поле, в котором все паттерны заменены на эквивалентные им комбинации единиц и нулей (по логике должно быть bool**, но для более удобного преобразования в обычное поле оставлен тип int**)
 
 enum dir { UP, LEFT, DOWN, RIGHT }; // Направления сдвига паттернов
 
-class srwlock {
-	SRWLOCK _lk{};
+// Альтернатива мьютексу из <mutex>
+class mutex {
+	SRWLOCK lk {};
 public:
-	void lock() { AcquireSRWLockExclusive(&_lk); }
-	void unlock() { ReleaseSRWLockExclusive(&_lk); }
-	srwlock() = default;
+	void lock() { AcquireSRWLockExclusive(&lk); }
+	void unlock() { ReleaseSRWLockExclusive(&lk); }
 } mtx;
 
 Cell* PATTERNS0; // Паттерны не создающие жизнь в центе
@@ -26,23 +28,43 @@ int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
 extern int*** FIELDS; // Искомые поля
 extern int NUM_OF_FIELDS; // Количество искомых полей
 
-// Поиск структуры эквиваентной паттерну
+// Поиск ячейки эквиваентной паттерну
 Cell FindPattern(int pattern) {
-	for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-		if (pattern == PATTERNS0[i].pattern.pattern)
-			return PATTERNS0[i];
-	for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-		if (pattern == PATTERNS1[i].pattern.pattern)
-			return PATTERNS1[i];
+	if (pattern > 100 && pattern < 10000) {
+		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
+			if (pattern == PATTERNS1[i].pattern.pattern)
+				return PATTERNS1[i];
+		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
+			if (pattern == PATTERNS0[i].pattern.pattern)
+				return PATTERNS0[i];
+	}
+	else {
+		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
+			if (pattern == PATTERNS0[i].pattern.pattern)
+				return PATTERNS0[i];
+		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
+			if (pattern == PATTERNS1[i].pattern.pattern)
+				return PATTERNS1[i];
+	}
 }
-// Поиск структуры эквиваентной инвертированному паттерну
+// Поиск ячейки эквиваентной инвертированному паттерну
 Cell FindInversePattern(int inversePattern) {
-	for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-		if (inversePattern == PATTERNS0[i].inversePattern.pattern)
-			return PATTERNS0[i];
-	for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-		if (inversePattern == PATTERNS1[i].inversePattern.pattern)
-			return PATTERNS1[i];
+	if (inversePattern > 10000 && inversePattern < 1000000) {
+		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
+			if (inversePattern == PATTERNS1[i].inversePattern.pattern)
+				return PATTERNS1[i];
+		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
+			if (inversePattern == PATTERNS0[i].inversePattern.pattern)
+				return PATTERNS0[i];
+	} 
+	else {
+		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
+			if (inversePattern == PATTERNS0[i].inversePattern.pattern)
+				return PATTERNS0[i];
+		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
+			if (inversePattern == PATTERNS1[i].inversePattern.pattern)
+				return PATTERNS1[i];
+	}
 }
 // Проверка на содержание цифры в паттерне
 bool MatchCheck(int digit, Pattern pattern) {
@@ -69,7 +91,7 @@ bool FullMatchCheck(Pattern pattern1, Pattern pattern2) {
 				match = false;
 	return match;
 }
-// Преобразование из поля структур в обычное поле
+// Преобразование из поля ячеек в обычное поле
 int** CellToInt(Cell** field, int m, int n) {
 	int** newField = (int**)malloc(m * sizeof(int*));
 	for (int i = 0; i < m; i++) {
@@ -79,7 +101,7 @@ int** CellToInt(Cell** field, int m, int n) {
 	}
 	return newField;
 }
-// Заполение структуры исходя из эквивалентного паттерна
+// Заполение ячейки исходя из эквивалентного паттерна
 void Cell::FillCell(int pattern) {
 	this->pattern.pattern = 0;
 	this->pattern.patternBitwise = nullptr;
