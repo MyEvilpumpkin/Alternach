@@ -8,7 +8,7 @@ using namespace std;
 // Расширенный паттерн (Pattern) - структура, предназначенная для хранения расширенной информации о паттерне
 // Ячейка (Cell) - структура, предназначенная для хранения в одном месте расширенного паттерна и инвертированного расширенного паттерна
 // Поле (int**) - комбинация паттернов
-// Поле ячеек (Cell**) - поле, в котором паттерны заменены на ячейки (для сокращения количества рассчётов)
+// Поле ячеек (Cell**) - поле, в котором паттерны заменены на ячейки (для сокращения количества расчетов)
 // Преобразованное поле (int**) - поле, в котором все паттерны заменены на эквивалентные им комбинации единиц и нулей (по логике должно быть bool**, но для более удобного преобразования в обычное поле оставлен тип int**)
 
 enum dir { UP, LEFT, DOWN, RIGHT }; // Направления сдвига паттернов
@@ -186,38 +186,24 @@ void FindAllPatterns() {
 	}
 }
 // Сдвиг паттерна
-int MovePattern(int pattern, dir direction) {
-	int newPattern = 0, dec = 1;
-	while (pattern > 0) {
-		int digit = pattern % 10;
-		pattern /= 10;
+int MovePattern(Pattern pattern, dir direction) {
+	int newPattern = 0;
+	for (int i = 0; i < pattern.numOfLiveCells; i++) {
 		if (direction == LEFT) {
-			if (digit != 1 && digit != 4 && digit != 7) {
-				digit--;
-				newPattern += digit * dec;
-				dec *= 10;
-			}
+			if (pattern.patternBitwise[i] != 1 && pattern.patternBitwise[i] != 4 && pattern.patternBitwise[i] != 7)
+				newPattern = newPattern * 10 + (pattern.patternBitwise[i] - 1);
 		}
 		else if (direction == UP) {
-			if (digit > 3) {
-				digit -= 3;
-				newPattern += digit * dec;
-				dec *= 10;
-			}
+			if (pattern.patternBitwise[i] > 3)
+				newPattern = newPattern * 10 + (pattern.patternBitwise[i] - 3);
 		}
 		else if (direction == RIGHT) {
-			if (digit != 3 && digit != 6 && digit != 9) {
-				digit++;
-				newPattern += digit * dec;
-				dec *= 10;
-			}
+			if (pattern.patternBitwise[i] != 3 && pattern.patternBitwise[i] != 6 && pattern.patternBitwise[i] != 9)
+				newPattern = newPattern * 10 + (pattern.patternBitwise[i] + 1);
 		}
 		else if (direction == DOWN) {
-			if (digit < 7) {
-				digit += 3;
-				newPattern += digit * dec;
-				dec *= 10;
-			}
+			if (pattern.patternBitwise[i] < 7) 
+				newPattern = newPattern * 10 + (pattern.patternBitwise[i] + 3);
 		}
 	}
 	return newPattern;
@@ -228,8 +214,8 @@ Cell* FindNeighboursOneSide(Cell pattern, dir direction, bool option) {
 		direction = LEFT;
 	else if (direction == DOWN)
 		direction = UP;
-	Cell newPattern = FindPattern(MovePattern(pattern.pattern.pattern, direction));
-	Cell newInversePattern = FindInversePattern(MovePattern(pattern.inversePattern.pattern, direction));
+	Cell newPattern = FindPattern(MovePattern(pattern.pattern, direction));
+	Cell newInversePattern = FindInversePattern(MovePattern(pattern.inversePattern, direction));
 	Cell* neighbours = nullptr;
 	int numOfNeighbours = 0;
 	if (option) {
