@@ -28,43 +28,84 @@ int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
 extern int*** FIELDS; // Искомые поля
 extern int NUM_OF_FIELDS; // Количество искомых полей
 
+// Сортировка наборов паттернов
+Cell* Sort(Cell* arr, int num) {
+	for (int i = 0; i < num - 1; i++)
+		for (int j = i; j < num; j++)
+			if (arr[i].pattern.pattern > arr[j].pattern.pattern) {
+				Cell temp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = temp;
+			}
+	return arr;
+}
 // Поиск ячейки эквиваентной паттерну
 Cell FindPattern(int pattern) {
+	Cell temp;
+	bool stop = false, skip = false;
 	if (pattern > 100 && pattern < 10000) {
-		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-			if (pattern == PATTERNS1[i].pattern.pattern)
-				return PATTERNS1[i];
-		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-			if (pattern == PATTERNS0[i].pattern.pattern)
-				return PATTERNS0[i];
+		for (int i = 0; i < NUM_OF_PATTERNS1 && !stop && !skip; i++)
+			if (pattern == PATTERNS1[i].pattern.pattern) {
+				temp = PATTERNS1[i];
+				stop = true;
+			}
+			else if (pattern < PATTERNS1[i].pattern.pattern)
+				skip = true;
+		for (int i = 0; i < NUM_OF_PATTERNS0 && !stop; i++)
+			if (pattern == PATTERNS0[i].pattern.pattern) {
+				temp = PATTERNS0[i];
+				stop = true;
+			}
 	}
 	else {
-		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-			if (pattern == PATTERNS0[i].pattern.pattern)
-				return PATTERNS0[i];
-		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-			if (pattern == PATTERNS1[i].pattern.pattern)
-				return PATTERNS1[i];
+		for (int i = 0; i < NUM_OF_PATTERNS0 && !stop && !skip; i++)
+			if (pattern == PATTERNS0[i].pattern.pattern) {
+				temp = PATTERNS0[i];
+				stop = true;
+			}
+			else if (pattern < PATTERNS0[i].pattern.pattern)
+				skip = true;
+		for (int i = 0; i < NUM_OF_PATTERNS1 && !stop; i++)
+			if (pattern == PATTERNS1[i].pattern.pattern) {
+				temp = PATTERNS1[i];
+				stop = true;
+			}
 	}
+	return temp;
 }
 // Поиск ячейки эквиваентной инвертированному паттерну
 Cell FindInversePattern(int inversePattern) {
+	Cell temp;
+	bool stop = false, skip = false;
 	if (inversePattern > 10000 && inversePattern < 1000000) {
-		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-			if (inversePattern == PATTERNS1[i].inversePattern.pattern)
-				return PATTERNS1[i];
-		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-			if (inversePattern == PATTERNS0[i].inversePattern.pattern)
-				return PATTERNS0[i];
-	} 
-	else {
-		for (int i = 0; i < NUM_OF_PATTERNS0; i++)
-			if (inversePattern == PATTERNS0[i].inversePattern.pattern)
-				return PATTERNS0[i];
-		for (int i = 0; i < NUM_OF_PATTERNS1; i++)
-			if (inversePattern == PATTERNS1[i].inversePattern.pattern)
-				return PATTERNS1[i];
+		for (int i = 0; i < NUM_OF_PATTERNS1 && !stop && !skip; i++)
+			if (inversePattern == PATTERNS1[i].inversePattern.pattern) {
+				temp = PATTERNS1[i];
+				stop = true;
+			}
+			else if (inversePattern > PATTERNS1[i].inversePattern.pattern)
+				skip = true;
+		for (int i = 0; i < NUM_OF_PATTERNS0 && !stop; i++)
+			if (inversePattern == PATTERNS0[i].inversePattern.pattern) {
+				temp = PATTERNS0[i];
+				stop = true;
+			}
 	}
+	else {
+		for (int i = 0; i < NUM_OF_PATTERNS0 && !stop && !skip; i++)
+			if (inversePattern == PATTERNS0[i].inversePattern.pattern) {
+				temp = PATTERNS0[i];
+				stop = true;
+			}
+			else if (inversePattern > PATTERNS0[i].inversePattern.pattern)
+				skip = true;
+		for (int i = 0; i < NUM_OF_PATTERNS1 && !stop; i++)
+			if (inversePattern == PATTERNS1[i].inversePattern.pattern) {
+				temp = PATTERNS1[i];
+				stop = true;
+			}
+	}
+	return temp;
 }
 // Проверка на содержание цифры в паттерне
 bool MatchCheck(int digit, Pattern pattern) {
@@ -184,6 +225,8 @@ void FindAllPatterns() {
 			PATTERNS0[NUM_OF_PATTERNS0++].FillCell(pattern);
 		}
 	}
+	Sort(PATTERNS0, NUM_OF_PATTERNS0);
+	Sort(PATTERNS1, NUM_OF_PATTERNS1);
 }
 // Сдвиг паттерна
 int MovePattern(Pattern pattern, dir direction) {
