@@ -21,10 +21,10 @@ public:
 	void unlock() { ReleaseSRWLockExclusive(&lk); }
 } mtx;
 
-Cell* PATTERNS0; // Паттерны не создающие жизнь в центе
-int NUM_OF_PATTERNS0; // Количество паттернов, не создающих жизнь в центе
-Cell* PATTERNS1; // Паттерны создающие жизнь в центре
-int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
+extern Cell* PATTERNS0; // Паттерны не создающие жизнь в центе
+extern int NUM_OF_PATTERNS0; // Количество паттернов, не создающих жизнь в центе
+extern Cell* PATTERNS1; // Паттерны создающие жизнь в центре
+extern int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
 extern int*** FIELDS; // Искомые поля
 extern int NUM_OF_FIELDS; // Количество искомых полей
 
@@ -245,7 +245,7 @@ int MovePattern(Pattern pattern, dir direction) {
 				newPattern = newPattern * 10 + (pattern.patternBitwise[i] + 1);
 		}
 		else if (direction == DOWN) {
-			if (pattern.patternBitwise[i] < 7) 
+			if (pattern.patternBitwise[i] < 7)
 				newPattern = newPattern * 10 + (pattern.patternBitwise[i] + 3);
 		}
 	}
