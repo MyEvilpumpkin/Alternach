@@ -3,6 +3,10 @@
 #include "ReverseGoL.h"
 using namespace std;
 
+Cell* PATTERNS0; // Паттерны не создающие жизнь в центе
+int NUM_OF_PATTERNS0; // Количество паттернов, не создающих жизнь в центе
+Cell* PATTERNS1; // Паттерны создающие жизнь в центре
+int NUM_OF_PATTERNS1; // Количество паттернов, создающих жизнь в центре
 int*** FIELDS; // Искомые поля
 int NUM_OF_FIELDS; // Количество искомых полей
 
