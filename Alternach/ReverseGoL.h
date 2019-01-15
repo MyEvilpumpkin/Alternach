@@ -15,6 +15,7 @@ struct Cell {
 	void FillCell(int); // Заполение ячейки исходя из эквивалентного паттерна
 };
 
+bool MatchCheck(int, Pattern); // Проверка на содержание цифры в паттерне
 int** FreeField(int**, int); // Освобождение памяти из под поля
 void FreePatterns(); // Освобождание памяти из под паттернов
 void FreeFIELDS(int); // Освобождение памяти из под полей
